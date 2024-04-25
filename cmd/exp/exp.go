@@ -1,30 +1,37 @@
 package main
 
 import (
-	"html/template"
-	"os"
+	"fmt"
+
+	"github.com/dre4success/lenslocked/models"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-type User struct {
-	Name string
-	Age  int
-	Bio string
-}
+
 
 func main() {
-	t, err := template.ParseFiles("hello.gohtml")
+	
+
+	cfg := models.DefaultPostgresConfig()
+	db, err := models.Open(cfg)
 	if err != nil {
 		panic(err)
 	}
+	defer db.Close()
 
-	user := User{
-		Name: "John Smith",
-		Age:  23,
-		Bio: `<script>alert("Haha, you have been h4x0r3d!");</script>`,
-	}
-
-	err = t.Execute(os.Stdout, user)
+	err = db.Ping()
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("Connected!")
+
+	us := models.UserService{
+		DB: db,
+	}
+
+	user, err := us.Create("drede@drde.com", "rq23e43")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(user)
 }
