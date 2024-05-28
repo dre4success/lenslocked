@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"net/http"
+    "github.com/dre4success/lenslocked/migrations"
+    "net/http"
 
 	"github.com/dre4success/lenslocked/controllers"
 	"github.com/dre4success/lenslocked/models"
@@ -29,6 +30,11 @@ func main() {
 		panic(err)
 	}
 	defer db.Close()
+
+	err = models.MigrateFs(db, migrations.FS, ".")
+	if err != nil {
+		panic(err)
+	}
 
 	userService := models.UserService{
 		DB: db,
