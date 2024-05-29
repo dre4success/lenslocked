@@ -1,37 +1,22 @@
 package main
 
 import (
+	stdctx "context"
 	"fmt"
 
+	"github.com/dre4success/lenslocked/context"
 	"github.com/dre4success/lenslocked/models"
-	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 
-
 func main() {
+	ctx := stdctx.Background()
 	
-
-	cfg := models.DefaultPostgresConfig()
-	db, err := models.Open(cfg)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Connected!")
-
-	us := models.UserService{
-		DB: db,
+	user := models.User{
+		Email: "dre@dre.com",
 	}
 
-	user, err := us.Create("drede@drde.com", "rq23e43")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(user)
+	ctx = context.WithUser(ctx, &user)
+	retrievedUser := context.User(ctx)
+	fmt.Println(retrievedUser.Email)
 }
