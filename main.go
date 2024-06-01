@@ -56,6 +56,8 @@ func main() {
 		templates.FS, "signup.gohtml", twl))
 	usersC.Templates.SignIn = views.Must(views.ParseFS(
 		templates.FS, "signin.gohtml", twl))
+	usersC.Templates.ForgotPassword = views.Must(views.ParseFS(
+		templates.FS, "forgot-pw.gohtml", twl))
 
 	// set up router and routes
 	r := chi.NewRouter()
@@ -80,6 +82,8 @@ func main() {
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Page not found", http.StatusNotFound)
 	})
+	r.Get("/forgot-pw", usersC.ForgotPassword)
+	r.Post("/forgot-pw", usersC.ProcessForgotPassword)
 
 	// start the server
 	fmt.Println("Starting the server on :5050...")
