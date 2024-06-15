@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/dre4success/lenslocked/context"
 	"github.com/dre4success/lenslocked/models"
@@ -62,7 +63,7 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data interface
 }
 
 func ParseFS(fs fs.FS, pattern ...string) (Template, error) {
-	htmlTpl := template.New(pattern[0])
+	htmlTpl := template.New(filepath.Base(pattern[0]))
 	htmlTpl = htmlTpl.Funcs(
 		template.FuncMap{
 			"csrfField": func() (template.HTML, error) {

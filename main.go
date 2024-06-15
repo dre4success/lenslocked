@@ -83,6 +83,9 @@ func main() {
 		DB: db,
 	}
 	emailService := models.NewEmailService(cfg.SMTP)
+	galleryService := &models.GalleryService{
+		DB: db,
+	}
 
 	// set up middleware
 	umw := controllers.UserMiddleware{
@@ -92,6 +95,7 @@ func main() {
 	csrfMw := csrf.Protect(
 		[]byte(cfg.CSRF.Key),
 		csrf.Secure(cfg.CSRF.Secure),
+		csrf.Path("/"),
 	)
 
 	// set up controllers
@@ -101,6 +105,11 @@ func main() {
 		PasswordResetService: pwResetService,
 		EmailService:         emailService,
 	}
+
+	galleriesC := controllers.Galleries{
+		GalleryService: galleryService,
+	}
+
 	twl := "tailwind.gohtml"
 	usersC.Templates.NewTemp = views.Must(views.ParseFS(
 		templates.FS, "signup.gohtml", twl))
@@ -112,6 +121,15 @@ func main() {
 		templates.FS, "check-your-email.gohtml", twl))
 	usersC.Templates.ResetPassword = views.Must(views.ParseFS(
 		templates.FS, "reset-pw.gohtml", twl))
+
+	galleriesC.Templates.New = views.Must(views.ParseFS(
+		templates.FS, "galleries/new.gohtml", twl))
+	galleriesC.Templates.Edit = views.Must(views.ParseFS(
+		templates.FS, "galleries/edit.gohtml", twl))
+	galleriesC.Templates.Index = views.Must(views.ParseFS(
+		templates.FS, "galleries/index.gohtml", twl))
+	galleriesC.Templates.Show = views.Must(views.ParseFS(
+		templates.FS, "galleries/show.gohtml", twl))
 
 	// set up router and routes
 	r := chi.NewRouter()
@@ -141,6 +159,19 @@ func main() {
 
 	r.Get("/reset-pw", usersC.ResetPassword)
 	r.Post("/reset-pw", usersC.ProcessResetPassword)
+
+	r.Route("/galleries", func(r chi.Router) {
+		r.Get("/{id}", galleriesC.Show)
+		r.Group(func(r chi.Router) {
+			r.Use(umw.RequireUser)
+			r.Get("/", galleriesC.Index)
+			r.Get("/new", galleriesC.New)
+			r.Post("/", galleriesC.Create)
+			r.Get("/{id}/edit", galleriesC.Edit)
+			r.Post("/{id}", galleriesC.Update)
+			r.Post("/{id}/delete", galleriesC.Delete)
+		})
+	})
 
 	// start the server
 	fmt.Printf("Starting the server on %s...\n", cfg.Server.Address)
